@@ -20,25 +20,25 @@ var clientLibRunner = new BenchmarkRunner(() =>
     return connection;
 });
 
-var latencies = TestLatency();
-Console.WriteLine(Utils.ResultsToString(latencies));
+// var latencies = TestLatency();
+// Console.WriteLine(Utils.ResultsToString(latencies));
 
 // var decodeTimes = TestQuery();
 // Console.WriteLine(Utils.ResultsToString(decodeTimes));
-//
-// var transactionTimes = TestTransaction();
-// Console.WriteLine(Utils.ResultsToString(transactionTimes));
+
+var transactionTimes = TestTransaction();
+Console.WriteLine(Utils.ResultsToString(transactionTimes));
 
 Dictionary<MeasurementKey, Measurement> TestTransaction()
 {
     try
     {
         var results = new Dictionary<MeasurementKey, Measurement>();
-        foreach (var numThreads in new [] { 1, 5, 10, 50, 100, 200 })
-        //foreach (var numThreads in new [] { 10 })
+        // foreach (var numThreads in new [] { 1, 5, 10, 50, 100, 200 })
+        foreach (var numThreads in new [] { 1, 10, 20, 50, 100 })
         {
-            foreach (var tpsPerThread in new[] { 1, 10, 50 })
-            //foreach (var tpsPerThread in new[] { 10 })
+            // foreach (var tpsPerThread in new[] { 1, 10, 50 })
+            foreach (var tpsPerThread in new[] { 1, 5, 10 })
             {
                 Console.WriteLine($"Testing transactions for ClientLib with {tpsPerThread} TPS and {numThreads} threads...");
                 var clientLibLatency = clientLibRunner.MeasureTransaction(TimeSpan.FromSeconds(60), tpsPerThread, numThreads);
@@ -77,11 +77,11 @@ Dictionary<MeasurementKey, Measurement> TestLatency()
     try
     {
         var results = new Dictionary<MeasurementKey, Measurement>();
-        // foreach (var numThreads in new [] { 1, 2, 5, 10 })
-        foreach (var numThreads in new [] { 1 })
+        foreach (var numThreads in new [] { 1, 2, 5, 10 })
+        // foreach (var numThreads in new [] { 1 })
         {
-            // foreach (var qpsPerThread in new[] { 1, 2, 5, 10, 20, 100 })
-            foreach (var qpsPerThread in new[] { 1 })
+            foreach (var qpsPerThread in new[] { 1, 2, 5, 10, 20, 100 })
+            // foreach (var qpsPerThread in new[] { 1 })
             {
                 Console.WriteLine($"Testing latency for SpannerLib with {qpsPerThread} QPS and {numThreads} threads...");
                 var spannerLibLatency = spannerLibRunner.MeasureLatency(TimeSpan.FromSeconds(30), qpsPerThread, numThreads);
@@ -129,6 +129,7 @@ Dictionary<MeasurementKey, Measurement> TestQuery()
             {
                 numIterations = 5;
             }
+            numIterations = 1;
 
             Console.WriteLine($"Benchmarking Spanner Lib ExecuteQuery with {numRows} rows");
             var measurement = spannerLibRunner.MeasureExecuteQuery(numIterations, numRows);

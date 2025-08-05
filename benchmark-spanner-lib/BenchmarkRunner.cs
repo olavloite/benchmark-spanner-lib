@@ -1,5 +1,6 @@
 using System.Data;
 using System.Data.Common;
+using Google.Api.Gax;
 
 namespace benchmark_spanner_lib;
 
@@ -12,12 +13,12 @@ public class BenchmarkRunner
         _connectionFactory = connectionFactory;
     }
 
-    public static void Warmup(DbConnection connection)
+    private static void Warmup(DbConnection connection)
     {
         using var cmd = connection.CreateCommand();
         cmd.CommandText = "select 1";
         using var reader = cmd.ExecuteReader();
-        Utils.ConsumeReader(reader);
+        Utils.ConsumeReader(reader).WaitWithUnwrappedExceptions();
     }
 
     public Measurement MeasureTransaction(TimeSpan duration, int tpsPerThread, int numThreads)

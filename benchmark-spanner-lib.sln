@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "benchmark-spanner-lib", "benchmark-spanner-lib\benchmark-spanner-lib.csproj", "{D7A42373-0E43-4043-BF1C-358EF8BE865F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Google.Cloud.Spanner.DataProvider", "..\SpannerDriver\Google.Cloud.Spanner.DataProvider\Google.Cloud.Spanner.DataProvider.csproj", "{90BA0B10-EF58-4C75-AC0D-4A18A9E54B04}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{D7A42373-0E43-4043-BF1C-358EF8BE865F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D7A42373-0E43-4043-BF1C-358EF8BE865F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D7A42373-0E43-4043-BF1C-358EF8BE865F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90BA0B10-EF58-4C75-AC0D-4A18A9E54B04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90BA0B10-EF58-4C75-AC0D-4A18A9E54B04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90BA0B10-EF58-4C75-AC0D-4A18A9E54B04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90BA0B10-EF58-4C75-AC0D-4A18A9E54B04}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

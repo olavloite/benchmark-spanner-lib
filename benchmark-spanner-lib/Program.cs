@@ -1,8 +1,12 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using System.Data;
+using System.Runtime.InteropServices;
 using benchmark_spanner_lib;
-using Google.Cloud.Spanner.DataProvider;
+using Google.Cloud.Spanner.Data;
+using Google.Cloud.Spanner.GrpcProxy;
+using Grpc.Core;
+using SpannerConnection = Google.Cloud.Spanner.DataProvider.SpannerConnection;
 
 var connectionString = "projects/appdev-soda-spanner-staging/instances/knut-test-probers/databases/prober";
 
@@ -16,6 +20,28 @@ var clientLibRunner = new BenchmarkRunner(() =>
 {
     var connection = new Google.Cloud.Spanner.Data.SpannerConnection();
     connection.ConnectionString = $"Data Source={connectionString}";
+    connection.Open();
+    return connection;
+});
+
+Console.WriteLine($"Linux: {RuntimeInformation.IsOSPlatform(OSPlatform.Linux)}");
+Console.WriteLine($"Arch: {RuntimeInformation.OSArchitecture}");
+
+var proxy = new Proxy();
+var address = proxy.Start(Proxy.AddressType.Tcp);
+Console.WriteLine($"Started proxy on {address}");
+// var address = "localhost:9999";
+var hostAndPort = address.Split(":");
+var proxyRunner = new BenchmarkRunner(() =>
+{
+    var builder = new SpannerConnectionStringBuilder($"Data Source={connectionString}", ChannelCredentials.Insecure)
+    {
+        Host = hostAndPort[0],
+        Port = int.Parse(hostAndPort[1]),
+        MaxConcurrentStreamsLowWatermark = 1,
+        MaximumGrpcChannels = 16,
+    };
+    var connection = new Google.Cloud.Spanner.Data.SpannerConnection(builder);
     connection.Open();
     return connection;
 });
@@ -35,30 +61,42 @@ Dictionary<MeasurementKey, Measurement> TestTransaction()
     {
         var results = new Dictionary<MeasurementKey, Measurement>();
         // foreach (var numThreads in new [] { 1, 5, 10, 50, 100, 200 })
-        foreach (var numThreads in new [] { 1, 10, 20, 50, 100 })
+        // foreach (var numThreads in new [] { 1, 10, 20, 50, 100 })
+        foreach (var numThreads in new [] { 50 })
         {
             // foreach (var tpsPerThread in new[] { 1, 10, 50 })
-            foreach (var tpsPerThread in new[] { 1, 5, 10 })
+            // foreach (var tpsPerThread in new[] { 1, 5, 10 })
+            foreach (var tpsPerThread in new[] { 10 })
             {
-                Console.WriteLine($"Testing transactions for ClientLib with {tpsPerThread} TPS and {numThreads} threads...");
-                var clientLibLatency = clientLibRunner.MeasureTransaction(TimeSpan.FromSeconds(60), tpsPerThread, numThreads);
-                Console.WriteLine($"ClientLib Transaction Latency:{Environment.NewLine}{clientLibLatency}");
-                results[new MeasurementKey
-                {
-                    Library = Library.ClientLib,
-                    NumThreads = numThreads,
-                    Qps = tpsPerThread,
-                }] = clientLibLatency;
+                // Console.WriteLine($"Testing transactions for ClientLib with {tpsPerThread} TPS and {numThreads} threads...");
+                // var clientLibLatency = clientLibRunner.MeasureTransaction(TimeSpan.FromSeconds(60), tpsPerThread, numThreads);
+                // Console.WriteLine($"ClientLib Transaction Latency:{Environment.NewLine}{clientLibLatency}");
+                // results[new MeasurementKey
+                // {
+                //     Library = Library.ClientLib,
+                //     NumThreads = numThreads,
+                //     Qps = tpsPerThread,
+                // }] = clientLibLatency;
+                //
+                // Console.WriteLine($"Testing transactions for SpannerLib with {tpsPerThread} TPS and {numThreads} threads...");
+                // var spannerLibLatency = spannerLibRunner.MeasureTransaction(TimeSpan.FromSeconds(60), tpsPerThread, numThreads);
+                // Console.WriteLine($"SpannerLib Transaction Latency:{Environment.NewLine}{spannerLibLatency}");
+                // results[new MeasurementKey
+                // {
+                //     Library = Library.SpannerLib,
+                //     NumThreads = numThreads,
+                //     Qps = tpsPerThread,
+                // }] = spannerLibLatency;
                 
-                Console.WriteLine($"Testing transactions for SpannerLib with {tpsPerThread} TPS and {numThreads} threads...");
-                var spannerLibLatency = spannerLibRunner.MeasureTransaction(TimeSpan.FromSeconds(60), tpsPerThread, numThreads);
-                Console.WriteLine($"SpannerLib Transaction Latency:{Environment.NewLine}{spannerLibLatency}");
+                Console.WriteLine($"Testing transactions for Proxy with {tpsPerThread} TPS and {numThreads} threads...");
+                var proxyLatency = proxyRunner.MeasureTransaction(TimeSpan.FromSeconds(300), tpsPerThread, numThreads);
+                Console.WriteLine($"Proxy Transaction Latency:{Environment.NewLine}{proxyLatency}");
                 results[new MeasurementKey
                 {
-                    Library = Library.SpannerLib,
+                    Library = Library.Proxy,
                     NumThreads = numThreads,
                     Qps = tpsPerThread,
-                }] = spannerLibLatency;
+                }] = proxyLatency;
             }
         }
         return results;

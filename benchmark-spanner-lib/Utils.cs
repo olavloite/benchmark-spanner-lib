@@ -8,31 +8,77 @@ public static class Utils
     public static string ResultsToString(Dictionary<MeasurementKey, Measurement> results)
     {
         var builder = new StringBuilder();
-        builder.Append($";;;SpannerLib;ClientLib;SpannerLib;ClientLib;SpannerLib;ClientLib;SpannerLib;ClientLib;SpannerLib;ClientLib;SpannerLib;ClientLib;SpannerLib;ClientLib{Environment.NewLine}");
-        builder.Append($"NumThreads;Qps;NumRows;P50;P50;P90;P90;P95;P95;P99;P99;Min;Min;Max;Max;Avg;Avg{Environment.NewLine}");
+        if (results.Any(result => result.Key.Library == Library.SpannerLib))
+        {
+            builder.Append($";;;SpannerLib;ClientLib;SpannerLib;ClientLib;SpannerLib;ClientLib;SpannerLib;ClientLib;SpannerLib;ClientLib;SpannerLib;ClientLib;SpannerLib;ClientLib{Environment.NewLine}");
+            builder.Append($"NumThreads;Qps;NumRows;P50;P50;P90;P90;P95;P95;P99;P99;Min;Min;Max;Max;Avg;Avg{Environment.NewLine}");
+        }
+        else
+        {
+            builder.Append($";;;ClientLib;Proxy;ClientLib;Proxy;ClientLib;Proxy;ClientLib;Proxy;ClientLib;Proxy;ClientLib;Proxy;ClientLib;Proxy{Environment.NewLine}");
+            builder.Append($"NumThreads;Qps;NumRows;P50;P50;P90;P90;P95;P95;P99;P99;Min;Min;Max;Max;Avg;Avg{Environment.NewLine}");
+        }
         foreach (var key in results.Keys.Order())
         {
-            if (key.Library == Library.SpannerLib)
+            // if (key.Library == Library.SpannerLib)
+            // {
+            //     var spannerLibResult = results[key];
+            //     
+            //     var clientLibKey = key;
+            //     clientLibKey.Library = Library.ClientLib;
+            //     var clientLibResult = results[clientLibKey];
+            //     
+            //     var proxyKey = key;
+            //     proxyKey.Library = Library.Proxy;
+            //     var proxyResult = results[proxyKey];
+            //     builder.Append($"{key.NumThreads};{key.Qps};{key.NumRows};" +
+            //                    $"{(long)spannerLibResult.P50.TotalMicroseconds};" +
+            //                    $"{(long)clientLibResult.P50.TotalMicroseconds};" +
+            //                    $"{(long)proxyResult.P50.TotalMicroseconds};" +
+            //                    $"{(long)spannerLibResult.P90.TotalMicroseconds};" +
+            //                    $"{(long)clientLibResult.P90.TotalMicroseconds};" +
+            //                    $"{(long)proxyResult.P90.TotalMicroseconds};" +
+            //                    $"{(long)spannerLibResult.P95.TotalMicroseconds};" +
+            //                    $"{(long)clientLibResult.P95.TotalMicroseconds};" +
+            //                    $"{(long)proxyResult.P95.TotalMicroseconds};" +
+            //                    $"{(long)spannerLibResult.P99.TotalMicroseconds};" +
+            //                    $"{(long)clientLibResult.P99.TotalMicroseconds};" +
+            //                    $"{(long)proxyResult.P99.TotalMicroseconds};" +
+            //                    $"{(long)spannerLibResult.Min.TotalMicroseconds};" +
+            //                    $"{(long)clientLibResult.Min.TotalMicroseconds};" +
+            //                    $"{(long)proxyResult.Min.TotalMicroseconds};" +
+            //                    $"{(long)spannerLibResult.Max.TotalMicroseconds};" +
+            //                    $"{(long)clientLibResult.Max.TotalMicroseconds};" +
+            //                    $"{(long)proxyResult.Max.TotalMicroseconds};" +
+            //                    $"{(long)spannerLibResult.Avg.TotalMicroseconds};" +
+            //                    $"{(long)clientLibResult.Avg.TotalMicroseconds}" +
+            //                    $"{(long)proxyResult.Avg.TotalMicroseconds}" +
+            //                    $"{Environment.NewLine}");
+            // }
+            if (key.Library == Library.ClientLib)
             {
-                var spannerLibResult = results[key];
                 var clientLibKey = key;
                 clientLibKey.Library = Library.ClientLib;
                 var clientLibResult = results[clientLibKey];
+                
+                var proxyKey = key;
+                proxyKey.Library = Library.Proxy;
+                var proxyResult = results[proxyKey];
                 builder.Append($"{key.NumThreads};{key.Qps};{key.NumRows};" +
-                               $"{(long)spannerLibResult.P50.TotalMicroseconds};" +
                                $"{(long)clientLibResult.P50.TotalMicroseconds};" +
-                               $"{(long)spannerLibResult.P90.TotalMicroseconds};" +
+                               $"{(long)proxyResult.P50.TotalMicroseconds};" +
                                $"{(long)clientLibResult.P90.TotalMicroseconds};" +
-                               $"{(long)spannerLibResult.P95.TotalMicroseconds};" +
+                               $"{(long)proxyResult.P90.TotalMicroseconds};" +
                                $"{(long)clientLibResult.P95.TotalMicroseconds};" +
-                               $"{(long)spannerLibResult.P99.TotalMicroseconds};" +
+                               $"{(long)proxyResult.P95.TotalMicroseconds};" +
                                $"{(long)clientLibResult.P99.TotalMicroseconds};" +
-                               $"{(long)spannerLibResult.Min.TotalMicroseconds};" +
+                               $"{(long)proxyResult.P99.TotalMicroseconds};" +
                                $"{(long)clientLibResult.Min.TotalMicroseconds};" +
-                               $"{(long)spannerLibResult.Max.TotalMicroseconds};" +
+                               $"{(long)proxyResult.Min.TotalMicroseconds};" +
                                $"{(long)clientLibResult.Max.TotalMicroseconds};" +
-                               $"{(long)spannerLibResult.Avg.TotalMicroseconds};" +
-                               $"{(long)clientLibResult.Avg.TotalMicroseconds}" +
+                               $"{(long)proxyResult.Max.TotalMicroseconds};" +
+                               $"{(long)clientLibResult.Avg.TotalMicroseconds};" +
+                               $"{(long)proxyResult.Avg.TotalMicroseconds}" +
                                $"{Environment.NewLine}");
             }
         }
@@ -80,26 +126,26 @@ public static class Utils
     
     public static async Task<int> ConsumeReader(DbDataReader reader)
     {
-        // var columnsBuilder = new StringBuilder();
-        // for (var col = 0; col < reader.FieldCount; col++)
-        // {
-        //     columnsBuilder.Append(reader.GetName(col));
-        //     columnsBuilder.Append(",");
-        // }
-        // columnsBuilder.Append(Environment.NewLine);
-        // var columns = columnsBuilder.ToString();
+        var columnsBuilder = new StringBuilder();
+        for (var col = 0; col < reader.FieldCount; col++)
+        {
+            columnsBuilder.Append(reader.GetName(col));
+            columnsBuilder.Append(",");
+        }
+        columnsBuilder.Append(Environment.NewLine);
+        var columns = columnsBuilder.ToString();
         var rowCount = 0;
         while (await reader.ReadAsync())
         {
             rowCount++;
-            // var lineBuilder = new StringBuilder();
-            // for (var i = 0; i < reader.FieldCount; i++)
-            // {
-            //     lineBuilder.Append(reader.GetValue(i));
-            //     lineBuilder.Append(",");
-            // }
-            // lineBuilder.Append(Environment.NewLine);
-            // var line = lineBuilder.ToString();
+            var lineBuilder = new StringBuilder();
+            for (var i = 0; i < reader.FieldCount; i++)
+            {
+                lineBuilder.Append(reader.GetValue(i));
+                lineBuilder.Append(",");
+            }
+            lineBuilder.Append(Environment.NewLine);
+            var line = lineBuilder.ToString();
         }
         return rowCount;
     }

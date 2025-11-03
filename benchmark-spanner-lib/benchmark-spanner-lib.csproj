@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Alpha.Google.Cloud.Spanner.GrpcProxy" Version="1.0.0-alpha.20251103155017" />
     <PackageReference Include="Experimental.SpannerDataProvider" Version="1.0.4" />
     <PackageReference Include="Google.Cloud.Spanner.Data" Version="5.1.0" />
     <PackageReference Include="OpenTelemetry" Version="1.12.0" />
